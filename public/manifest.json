@@ -1,0 +1,23 @@
+{
+  "id": "/dashboard.php",
+  "name": "AfyaCheck - Angalia Dalili Zako",
+  "short_name": "AfyaCheck",
+  "lang": "sw",
+  "start_url": "dashboard.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1b2a4a",
+  "description": "Angalia dalili zako za kiafya kwa msaada wa AI, kwa lugha ya Kiswahili.",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Tathmini ya dalili", "url": "assessment.php" },
+    { "name": "Kalenda ya Hedhi", "url": "calendar.php" },
+    { "name": "Dharura (SOS)", "url": "emergency.php" }
+  ]
+}
