@@ -53,12 +53,14 @@ function afyaHttpPostJson(string $url, array $headers, array $payload, int $time
 /** Kumbukumbu fupi: mtandao wa nje ukizuiwa, tusisubiri tena na tena (kila ombi lingechelewa sekunde nyingi). */
 function afyaBlockedFile(): string { return (defined('AFYA_WRITABLE_DIR') ? AFYA_WRITABLE_DIR : __DIR__) . '/ai_state.json'; }
 function afyaNetworkBlocked(): bool {
+    if (defined('IS_VERCEL') && IS_VERCEL) return false; // Vercel haizuii mtandao wa nje; usikumbuke "kuzuiwa"
     $f = afyaBlockedFile();
     if (!is_file($f)) return false;
     $d = json_decode((string)@file_get_contents($f), true);
     return is_array($d) && ($d['until'] ?? 0) > time();
 }
 function afyaMarkBlocked(int $seconds = 300): void {
+    if (defined('IS_VERCEL') && IS_VERCEL) return;
     @file_put_contents(afyaBlockedFile(), json_encode(['until' => time() + $seconds]), LOCK_EX);
 }
 function afyaClearBlocked(): void { if (is_file(afyaBlockedFile())) @unlink(afyaBlockedFile()); }
@@ -178,7 +180,7 @@ function callAI(array $messages, array $userProfile = []): array {
                 afyaLog("Gemini[$mode/$model] status={$r['status']} error={$lastError}");
                 if ($r['status'] === 0) { $networkDown = true; break 2; }          // hosting inazuia mtandao wa nje
                 if (in_array($r['status'], [401, 403], true)) break;               // ufunguo/ruhusa: badili mlango, si model
-                if (!in_array($r['status'], [400, 404], true)) break;              // 429/5xx: badili mlango
+                if (!in_array($r['status'], [400, 404, 502], true)) break;         // 429/5xx: badili mlango; 502 (jibu tupu): jaribu model nyingine
             }
         }
         if ($networkDown) afyaMarkBlocked(300);
