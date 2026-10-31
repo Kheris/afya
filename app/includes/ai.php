@@ -166,8 +166,10 @@ function callAI(array $messages, array $userProfile = []): array {
         $networkDown = false;
         $t0 = microtime(true);
         foreach (afyaGoogleModes() as $mode) {
-            foreach (afyaModelList() as $model) {
-                if (++$attempts > 5 || (microtime(true) - $t0) > 28) break 2; // Vercel: maxDuration 60s
+            $models = afyaModelList();
+            if ($mode === 'studio') $models[] = $models[0]; // jaribio la mwisho la model kuu (kwa makosa ya muda kama 503)
+            foreach ($models as $model) {
+                if (++$attempts > 6 || (microtime(true) - $t0) > 28) break 2; // Vercel: maxDuration 60s
                 $r = callGemini($messages, $system, $model, $mode);
                 if (!$r['ok'] && $r['status'] === 400 && stripos((string)$r['error'], 'think') !== false) {
                     $r = callGemini($messages, $system, $model, $mode, false); // model haikubali mpangilio wa "thinking"
@@ -178,9 +180,10 @@ function callAI(array $messages, array $userProfile = []): array {
                 }
                 $lastError = $r['error'];
                 afyaLog("Gemini[$mode/$model] status={$r['status']} error={$lastError}");
-                if ($r['status'] === 0) { $networkDown = true; break 2; }          // hosting inazuia mtandao wa nje
+                if ($r['status'] === 0 && !(defined('IS_VERCEL') && IS_VERCEL)) { $networkDown = true; break 2; } // hosting inazuia mtandao wa nje
+                if (in_array($r['status'], [429, 500, 502, 503, 504], true)) usleep(1200000); // msongamano wa muda: subiri kidogo, jaribu tena
                 if (in_array($r['status'], [401, 403], true)) break;               // ufunguo/ruhusa: badili mlango, si model
-                if (!in_array($r['status'], [400, 404, 502], true)) break;         // 429/5xx: badili mlango; 502 (jibu tupu): jaribu model nyingine
+                if (!in_array($r['status'], [0, 400, 404, 429, 500, 502, 503, 504], true)) break; // makosa ya muda: jaribu model/mara nyingine
             }
         }
         if ($networkDown) afyaMarkBlocked(300);
