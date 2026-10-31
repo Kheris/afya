@@ -37,8 +37,8 @@ define('DB_SSL',  in_array(strtolower((string)env('DB_SSL', '0')), ['1', 'true',
 
 // --- Gemini API ---
 define('GEMINI_API_KEY', env('GEMINI_API_KEY', ''));
-define('GEMINI_MODEL', env('GEMINI_MODEL', 'gemini-3.8-flash'));
-define('GEMINI_FALLBACK_MODEL', env('GEMINI_FALLBACK_MODEL', 'gemini-3.5-flash'));
+define('GEMINI_MODEL', env('GEMINI_MODEL', 'gemini-3.5-flash'));
+define('GEMINI_FALLBACK_MODEL', env('GEMINI_FALLBACK_MODEL', 'gemini-3.8-flash'));
 define('GEMINI_API_BASE', 'https://generativelanguage.googleapis.com/v1beta');   // AI Studio (ufunguo wa AIza...)
 define('GEMINI_VERTEX_BASE', 'https://aiplatform.googleapis.com/v1');           // Vertex AI express (ufunguo wa AQ....)
 
