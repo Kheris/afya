@@ -22,7 +22,13 @@ function getDB(): PDO {
         } catch (PDOException $e) {
             error_log('DB connect failed: ' . $e->getMessage());
             http_response_code(500);
-            die('Database connection error. Angalia Environment Variables (DB_HOST, DB_USER, DB_PASS, DB_NAME).');
+            $why = '';
+            if (APP_DEBUG) { // weka APP_DEBUG=1 kwenye Vercel kuona sababu halisi (kisha irudishe 0)
+                $why = ' [' . $e->getMessage() . '] host=' . DB_HOST . ' port=' . DB_PORT
+                     . ' db=' . DB_NAME . ' user=' . DB_USER . ' ssl=' . (DB_SSL ? '1' : '0')
+                     . ' pdo_mysql=' . (extension_loaded('pdo_mysql') ? 'yes' : 'NO');
+            }
+            die('Database connection error. Angalia Environment Variables (DB_HOST, DB_USER, DB_PASS, DB_NAME).' . $why);
         }
     }
     return $pdo;
