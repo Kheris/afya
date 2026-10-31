@@ -138,15 +138,14 @@ function callProxy(array $messages, string $system): array {
 function afyaModelList(): array {
     $m = [GEMINI_MODEL];
     if (defined('GEMINI_FALLBACK_MODEL')) $m[] = GEMINI_FALLBACK_MODEL;
-    $m[] = 'gemini-2.5-flash';
-    $m[] = 'gemini-2.0-flash';
+    $m[] = 'gemini-3.8-flash';
+    $m[] = 'gemini-3.5-flash';
     return array_values(array_unique($m));
 }
 
 /** Milango ya Google kwa mpangilio. AI Studio kwanza (imethibitishwa kufanya kazi na ufunguo huu); Vertex ni akiba. */
 function afyaGoogleModes(): array {
-    // Ufunguo wa "AQ." ni wa Vertex express; wa "AIza" ni wa AI Studio. Anza na mlango sahihi.
-    return (strpos((string)GEMINI_API_KEY, 'AQ.') === 0) ? ['vertex', 'studio'] : ['studio', 'vertex'];
+    return ['studio', 'vertex']; // Studio inafanya kazi na ufunguo huu; Vertex ni akiba tu
 }
 
 /**
