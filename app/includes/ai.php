@@ -141,7 +141,7 @@ function callProxy(array $messages, string $system): array {
 function afyaModelList(): array {
     $m = [GEMINI_MODEL];
     if (defined('GEMINI_FALLBACK_MODEL')) $m[] = GEMINI_FALLBACK_MODEL;
-    $m[] = 'gemini-3.5-flash';
+    $m[] = 'gemini-3.5-flash';   // zote hizi zimethibitishwa kuwepo kwenye orodha ya models ya ufunguo wako
     $m[] = 'gemini-3.8-flash';
     return array_values(array_unique($m));
 }
