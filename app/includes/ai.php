@@ -63,7 +63,7 @@ function afyaMarkBlocked(int $seconds = 300): void {
 }
 function afyaClearBlocked(): void { if (is_file(afyaBlockedFile())) @unlink(afyaBlockedFile()); }
 
-function afyaGeminiPayload(array $messages, string $system): array {
+function afyaGeminiPayload(array $messages, string $system, string $model = ''): array {
     $contents = [];
     foreach ($messages as $m) {
         $contents[] = [
@@ -71,10 +71,14 @@ function afyaGeminiPayload(array $messages, string $system): array {
             'parts' => [['text' => (string)($m['content'] ?? '')]],
         ];
     }
+    $gen = ['maxOutputTokens' => 2048, 'temperature' => 0.6];
+    if (strpos($model, '2.5-flash') !== false) {
+        $gen['thinkingConfig'] = ['thinkingBudget' => 0]; // jibu la haraka, tokeni hazipotei kwenye "kufikiri"
+    }
     return [
         'contents'          => $contents,
         'systemInstruction' => ['parts' => [['text' => $system]]],
-        'generationConfig'  => ['maxOutputTokens' => 1024, 'temperature' => 0.6],
+        'generationConfig'  => $gen,
     ];
 }
 
@@ -84,7 +88,7 @@ function afyaGeminiPayload(array $messages, string $system): array {
  *  - 'vertex': Vertex AI express (aiplatform.googleapis.com), ufunguo "AQ...."
  */
 function callGemini(array $messages, string $system, string $model, string $mode = 'studio'): array {
-    $payload = afyaGeminiPayload($messages, $system);
+    $payload = afyaGeminiPayload($messages, $system, $model);
     if ($mode === 'vertex') {
         $url = rtrim(GEMINI_VERTEX_BASE, '/') . '/publishers/google/models/' . rawurlencode($model)
              . ':generateContent?key=' . rawurlencode(GEMINI_API_KEY);
@@ -94,7 +98,7 @@ function callGemini(array $messages, string $system, string $model, string $mode
         $headers = ['x-goog-api-key: ' . GEMINI_API_KEY];
     }
 
-    [$code, $body, $err] = afyaHttpPostJson($url, $headers, $payload, 25);
+    [$code, $body, $err] = afyaHttpPostJson($url, $headers, $payload, 14);
 
     if ($err) {
         return ['ok' => false, 'status' => 0, 'error' => 'Muunganisho: ' . $err];
@@ -141,7 +145,8 @@ function afyaModelList(): array {
 
 /** Milango ya Google kwa mpangilio. AI Studio kwanza (imethibitishwa kufanya kazi na ufunguo huu); Vertex ni akiba. */
 function afyaGoogleModes(): array {
-    return ['studio', 'vertex'];
+    // Ufunguo wa "AQ." ni wa Vertex express; wa "AIza" ni wa AI Studio. Anza na mlango sahihi.
+    return (strpos((string)GEMINI_API_KEY, 'AQ.') === 0) ? ['vertex', 'studio'] : ['studio', 'vertex'];
 }
 
 /**
@@ -157,9 +162,10 @@ function callAI(array $messages, array $userProfile = []): array {
     if ($keySet && !afyaNetworkBlocked()) {
         $attempts = 0;
         $networkDown = false;
+        $t0 = microtime(true);
         foreach (afyaGoogleModes() as $mode) {
             foreach (afyaModelList() as $model) {
-                if (++$attempts > 5) break 2;
+                if (++$attempts > 5 || (microtime(true) - $t0) > 16) break 2; // Vercel: jumla chini ya sekunde 30
                 $r = callGemini($messages, $system, $model, $mode);
                 if ($r['ok']) {
                     afyaClearBlocked();
